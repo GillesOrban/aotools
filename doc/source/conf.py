@@ -23,6 +23,13 @@ sys.path.append(AOTOOLS_DIR)
 class Mock(MagicMock):
     @classmethod
     def __getattr__(cls, name):
+        # Make mocked modules behave more like real ones for importlib.
+        # In particular, importlib expects __path__ to be iterable when
+        # resolving submodules (e.g. scipy.linalg).
+        if name == '__path__':
+            return []
+        if name == '__file__':
+            return ''
         return Mock()
 
 
@@ -31,7 +38,8 @@ MOCK_MODULES = ['pyfftw', 'ipython','pyfits', 'PyQt4','IPython.qt.console.rich_i
                     'matplotlib.backends.backend_qt4agg','sip', 'pyqtgraph','pylab', 'OpenGL',
                     'matplotlib.figure',
                     'IPython.qt.console.rich_ipython_widget',
-                    'scipy.ndimage','scipy.optimize', 'scipy.lib.blas.fblas','scipy.fftpack','scipy.interpolate','scipy', 'scipy.special',
+                    'scipy.ndimage','scipy.optimize', 'scipy.lib.blas.fblas','scipy.fftpack','scipy.interpolate',
+                    'scipy', 'scipy.special', 'scipy.linalg',
                     'numpy', 'numpy.linalg', 'numpy.random', 'scipy.ndimage.interpolation',
                     'matplotlib','matplotlib.pyplot',
                     'numba',
@@ -101,7 +109,7 @@ release = aotools.__version__  # '0.1.0'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -392,4 +400,8 @@ epub_exclude_files = ['search.html']
 
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+# Sphinx 9 expects a mapping of key -> (target, inventory).
+# The inventory location (second element) must be a string or None.
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+}
